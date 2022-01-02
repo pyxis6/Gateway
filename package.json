@@ -1,0 +1,27 @@
+{
+  "name": "EXT-Gateway",
+  "version": "0.0.1",
+  "rev": "develop",
+  "description": "An embedded Gateway for MMM-GoogleAssistant for MagicMirror.",
+  "main": "EXT-Gateway.js",
+  "scripts": {
+    "preinstall": "installer/preinstall.sh",
+    "postinstall": "installer/postinstall.sh"
+  },
+  "keywords": [
+    "magic mirror",
+    "module",
+    "Google",
+    "plugins"
+  ],
+  "author": "bugsounet",
+  "license": "MIT",
+  "bugs": {
+    "url": "http://forum.bugsounet.fr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bugsounet/EXT-Gateway"
+  },
+  "homepage": "http://wiki.bugsounet.fr/en/EXT-Gateway"
+}
