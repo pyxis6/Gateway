@@ -30,29 +30,36 @@ Module.register("EXT-Gateway", {
 
   start: function () {
     if (this.config.debug) logGW = (...args) => { console.log("[GATEWAY]", ...args) }
-    this.ready = false
     this.GW = {
+      ready: false,
       spotify: {
-        useSpotify: false,
+        hello: false,
         connected: false
       },
       screen: {
-        useScreen: false
+        hello: false,
+        connected: false,
+        power: true
       },
       youtube: {
-        useYouTube: false
+        hello: false,
+        connected: false
       },
       links: {
-        useLinks: false
+        hello: false,
+        connected: false
       },
       photos: {
-        usePhotos: false
+        hello: false,
+        connected: false
       },
       radio: {
-        useRadio: false
+        hello: false,
+        connected: false
       },
       music: {
-        useMusic: false
+        hello: false,
+        connected: false
       }
     }
   },
@@ -75,7 +82,7 @@ Module.register("EXT-Gateway", {
         this.sendSocketNotification("INIT", this.config)
         break
       case "GA_READY":
-        this.ready = true
+        this.GW.ready = true
         logGW("EXT-Gateway is ready!")
         break
     }
@@ -86,34 +93,43 @@ Module.register("EXT-Gateway", {
   /***********************/
 
   ActionsOnStatus: function(status) {
-    if (!this.ready) return console.log("[GATEWAY] MMM-GoogleAssistant is not ready")
+    if (!this.GW.ready) return console.log("[GATEWAY] MMM-GoogleAssistant is not ready")
     logGW("Received GA status:", status)
     switch(status) {
       case "ASSISTANT_LISTEN":
       case "ASSISTANT_THINK":
-        this.sendNotification("EXT_SCREEN_WAKEUP") // wakeup the screen
-        this.sendNotification("EXT_SCREEN_LOCK") // lock the screen
-        this.sendNotification("EXT_SPOTIFY_VOLUME_MIN")
+        if(this.GW.screen.hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+          if (!this.GW.screen.power) this.sendNotification("EXT_SCREEN-WAKEUP")
+          this.sendNotification("EXT_SCREEN-LOCK")
+        }
+        if (this.GW.spotify.hello && this.GW.spotify.connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MIN")
+        if (this.GW.radio.hello && this.GW.radio.connected) this.sendNotification("EXT_RADIO-VOLUME_MIN")
+        if (this.GW.music.hello && this.GW.music.connected) this.sendNotification("EXT_MUSIC-VOLUME_MIN")
         /** to code...
         this.sendNotification("EXT_YT-CVLC_VOLUME_MIN")
-        this.sendNotification("EXT_MUSIC_VOLUME_MIN")
-        this.sendNotification("EXT_RADIO_MIN")
+        
         **/
         break
       case "ASSISTANT_HOOK":
       case "ASSISTANT_STANDBY":
-        this.sendNotification("EXT_SCREEN_UNLOCK") // unlock the screen
-        this.sendNotification("EXT_SPOTIFY_VOLUME_MAX")
+        if(this.GW.screen.hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+          this.sendNotification("EXT_SCREEN-UNLOCK") // unlock the screen
+        }
+        if (this.GW.spotify.hello && this.GW.spotify.connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MAX")
+        if (this.GW.radio.hello && this.GW.radio.connected) this.sendNotification("EXT_RADIO-VOLUME_MAX")
+        if (this.GW.music.hello && this.GW.music.connected) this.sendNotification("EXT_MUSIC-VOLUME_MAX")
         /** to code ...
         this.sendNotification("EXT_YT-CVLC_VOLUME_MAX")
-        this.sendNotification("EXT_MUSIC_VOLUME_MAX")
-        this.sendNotification("EXT_RADIO_MAX")
         **/
         break
       case "ASSISTANT_REPLY":
       case "ASSISTANT_CONTINUE":
       case "ASSISTANT_CONFIRMATION":
       case "ASSISTANT_ERROR":
+        break
+      case "USER_PRESENCE":
+        if (!this.GW.screen.hello) return
+        this.GW.screen.power = payload ? true : false
         break
     }
   },
@@ -123,45 +139,149 @@ Module.register("EXT-Gateway", {
   /*****************/
 
   ActionsOnExt: function(noti,payload) {
-    //logGW("Received EXT noti:", noti)
     switch(noti) {
       case "EXT_HELLO":
         this.helloEXT(payload)
-        //logGW(this.GW)
+        break
+      case "EXT_SCREEN-OFF":
+        if (!this.GW.screen.hello) return console.log("[GATEWAY] Warn NewPIR don't say to me HELLO!")
+        this.GW.screen.power = false
+        break
+      case "EXT_SCREEN-ON":
+        if (!this.GW.screen.hello) return console.log("[GATEWAY] Warn NewPIR don't say to me HELLO!")
+        this.GW.screen.power = true
         break
       case "EXT_STOP":
-      break
+        // normaly don't do anything every module will send status
+        break
+      case "EXT_MUSIC-CONNECTED":
+        if (!this.GW.music.hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
+        this.connected("music")
+        break
+      case "EXT_MUSIC-DISCONNECTED":
+        if (!this.GW.music.hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
+        this.disconnected("music")
+        break
+      case "EXT_RADIO-CONNECTED":
+        if (!this.GW.radio.hello) return console.log("[GATEWAY] Warn RadioPlayer don't say to me HELLO!")
+        this.connected("radio")
+        break
+      case "EXT_RADIO-DISCONNECTED":
+        if (!this.GW.radio.hello) return console.log("[GATEWAY] Warn RadioPlayer don't say to me HELLO!")
+        this.disconnected("radio")
+        break
+      case "EXT_SPOTIFY-CONNECTED":
+      case "EXT_SPOTIFY-DISCONNECTED":
+        /* do nothing */
+        break
+      case "EXT_SPOTIFY-PLAYER_CONNECTED":
+        if (!this.GW.spotify.hello) return console.error("[GATEWAY] Warn Spotify don't say to me HELLO!")
+        this.connected("spotify")
+        break
+      case "EXT_SPOTIFY-PLAYER_DISCONNECTED":
+        if (!this.GW.spotify.hello) return console.error("[GATEWAY] Warn Spotify don't say to me HELLO!")
+        this.disconnected("spotify")
+        break
+      case "EXT_YOUTUBE-CONNECTED":
+        if (!this.GW.youtube.hello) return console.error("[GATEWAY] Warn YouTube don't say to me HELLO!")
+        this.connected("youtube")
+        break
+      case "EXT_YOUTUBE-DISCONNECTED":
+        if (!this.GW.youtube.hello) return console.error("[GATEWAY] Warn YouTube don't say to me HELLO!")
+        this.disconnected("youtube")
+        break
+      default:
+        console.error("[GATEWAY] Sorry, i don't understand what is", noti, payload)
+        break
     }
   },
 
   /** Activate automaticaly any plugins **/
   helloEXT: function(module) {
-    console.log(module)
     switch (module) {
       case "EXT-Spotify":
-        this.GW.spotify.useSpotify= true
+        this.GW.spotify.hello= true
         logGW("Hello,", module)
         break
       case "EXT-NewPIR":
-        this.GW.screen.useScreen= true
+        this.GW.screen.hello= true
         logGW("Hello,", module)
         break
       case "EXT-Links":
-        this.GW.links.useLinks= true
+        this.GW.links.hello= true
         logGW("Hello,", module)
         break
       case "EXT-GooglePhotos":
-        this.GW.photos.usePhotos= true
+        this.GW.photos.hello= true
         logGW("Hello,", module)
         break
       case "EXT-RadioPlayer":
-        this.GW.radio.useRadio= true
+        this.GW.radio.hello= true
         logGW("Hello,", module)
         break
       case "EXT-MusicPlayer":
-        this.GW.music.useMusic= true
+        this.GW.music.hello= true
         logGW("Hello,", module)
         break
+      case "EXT-YouTube":
+        this.GW.youtube.hello= true
+        logGW("Hello,", module)
+        break
+      default:
+        console.error("[GATEWAY] Hi,", module, "what can i do for you ?")
+        break
     }
+  },
+
+  /** connected rules **/
+  connected: function(extName) {
+    if (!this.GW.ready) return console.error("[GATEWAY] Hey!,", extName, "MMM-GoogleAssistant is not ready")
+    if(this.GW.screen.hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+      if (!this.GW.screen.power) this.sendNotification("EXT_SCREEN-WAKEUP")
+      this.sendNotification("EXT_SCREEN-LOCK")
+    }
+    if (this.GW.spotify.hello && this.GW.spotify.connected) this.sendNotification("EXT_SPOTIFY-STOP")
+    if (this.GW.music.hello && this.GW.music.connected) this.sendNotification("EXT_MUSIC-STOP")
+    if (this.GW.radio.hello && this.GW.radio.connected) this.sendNotification("EXT_RADIO-STOP")
+    if (this.GW.youtube.hello && this.GW.youtube.connected) this.sendNotification("EXT_YOUTUBE-STOP")
+    this.GW[extName].connected = true
+    logGW("Connected:", extName)
+  },
+
+  /** disconnected rules **/
+  disconnected: function(extName) {
+    if (!this.GW.ready) return console.error("[GATEWAY] MMM-GoogleAssistant is not ready")
+    if (extName) this.GW[extName].connected = false
+    // sport time ... verify if there is again an EXT module connected !
+    setTimeout(()=> { // wait 1 sec before scan ...
+      if(!this.hasOwnDeepValueProperty(this.GW, "connected", true)) this.sendNotification("EXT_SCREEN-UNLOCK")
+      logGW("Disconnected", extName)
+    }, 1000)
+  },
+
+  /***************/
+  /**** Tools ****/
+  /***************/
+
+  /** hasOwnDeepValueProperty(obj, key, value)
+   * obj: object to check
+   * key: key to check in deep
+   * value: value to check with associated key
+   * @bugsounet 09/01/2022
+  **/
+  hasOwnDeepValueProperty: function(obj, key, value) {
+    if (typeof obj === 'object' && obj !== null) {
+      if (obj.hasOwnProperty(key)) return true
+      for (var p in obj) {
+        if (obj.hasOwnProperty(p) && this.hasOwnDeepValueProperty(obj[p], key, value)) {
+          //logGW("check", key+":"+value, "in", p)
+          if (obj[p][key] == value) {
+            logGW(p, "is connected")
+            return true
+          }
+        }
+      }
+    }
+    return false
   }
 })
