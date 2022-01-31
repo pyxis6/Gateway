@@ -60,6 +60,10 @@ Module.register("EXT-Gateway", {
       music: {
         hello: false,
         connected: false
+      },
+      alert: {
+        hello: false,
+        connected: false
       }
     }
   },
@@ -152,7 +156,7 @@ Module.register("EXT-Gateway", {
         this.GW.screen.power = true
         break
       case "EXT_STOP":
-        // normaly don't do anything every module will send status
+        if (this.GW.alert.hello) this.sendNotification("EXT_ALERT", { type: "information", message: "Tous les processus Extented sont maintenant arrêtés" })
         break
       case "EXT_MUSIC-CONNECTED":
         if (!this.GW.music.hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
@@ -225,6 +229,10 @@ Module.register("EXT-Gateway", {
         break
       case "EXT-YouTube":
         this.GW.youtube.hello= true
+        logGW("Hello,", module)
+        break
+      case "EXT-Alert":
+        this.GW.alert.hello= true
         logGW("Hello,", module)
         break
       default:
