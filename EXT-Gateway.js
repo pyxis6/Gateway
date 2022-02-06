@@ -64,7 +64,10 @@ Module.register("EXT-Gateway", {
       alert: {
         hello: false,
         connected: false
-      }
+      },
+      volume: {
+        hello: false
+      },
     }
   },
 
@@ -78,7 +81,7 @@ Module.register("EXT-Gateway", {
     return dom
   },
 
-  notificationReceived: function(noti, payload) {
+  notificationReceived: function(noti, payload, sender) {
     if (noti.startsWith("ASSISTANT_")) return this.ActionsOnStatus(noti)
     if (noti.startsWith("EXT_")) return this.ActionsOnExt(noti,payload)
     switch(noti) {
@@ -88,6 +91,16 @@ Module.register("EXT-Gateway", {
       case "GA_READY":
         this.GW.ready = true
         logGW("EXT-Gateway is ready!")
+        break
+      case "SHOW_ALERT": // trigger Alert to EXT-Alert module
+        if (!this.GW.alert.hello) return
+        logGW("Trigger Alert from:", payload)
+        this.sendNotification("EXT_ALERT", {
+          message: payload.message,
+          type: "warning",
+          sender: payload.title ? payload.title : sender.name,
+          timer: (payload.timer && payload.timer !=0)  ? payload.timer : null
+        })
         break
     }
   },
@@ -114,7 +127,6 @@ Module.register("EXT-Gateway", {
         
         **/
         break
-      case "ASSISTANT_HOOK":
       case "ASSISTANT_STANDBY":
         if(this.GW.screen.hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
           this.sendNotification("EXT_SCREEN-UNLOCK") // unlock the screen
@@ -130,6 +142,7 @@ Module.register("EXT-Gateway", {
       case "ASSISTANT_CONTINUE":
       case "ASSISTANT_CONFIRMATION":
       case "ASSISTANT_ERROR":
+      case "ASSISTANT_HOOK":
         break
       case "USER_PRESENCE":
         if (!this.GW.screen.hello) return
@@ -194,6 +207,9 @@ Module.register("EXT-Gateway", {
         if (!this.GW.youtube.hello) return console.error("[GATEWAY] Warn YouTube don't say to me HELLO!")
         this.disconnected("youtube")
         break
+      case "EXT_ALERT":
+      case "EXT_VOLUME_SET":
+        break
       default:
         console.error("[GATEWAY] Sorry, i don't understand what is", noti, payload)
         break
@@ -233,6 +249,10 @@ Module.register("EXT-Gateway", {
         break
       case "EXT-Alert":
         this.GW.alert.hello= true
+        logGW("Hello,", module)
+        break
+      case "EXT-Volume":
+        this.GW.volume.hello= true
         logGW("Hello,", module)
         break
       default:
