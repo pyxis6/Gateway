@@ -1,7 +1,6 @@
 /**
  ** Module : EXT-Gateway
- ** @bugsounet
- ** ©01-2022
+ ** @bugsounet ©02-2022
  ** support: http://forum.bugsounet.fr
  **/
 
@@ -28,47 +27,34 @@ Module.register("EXT-Gateway", {
     **/
   },
 
-  start: function () {
+  start: async function () {
     if (this.config.debug) logGW = (...args) => { console.log("[GATEWAY]", ...args) }
+    this.ExtDB = [
+      "EXT-Spotify",
+      "EXT-NewPIR",
+      "EXT-YouTube",
+      "EXT-YouTubeVLC",
+      "EXT-Links",
+      "EXT-GooglePhotos",
+      "EXT-RadioPlayer",
+      "EXT-MusicPlayer",
+      "EXT-Alert",
+      "EXT-Volume"
+    ]
+
     this.GW = {
-      ready: false,
-      spotify: {
-        hello: false,
-        connected: false
-      },
-      screen: {
-        hello: false,
-        connected: false,
-        power: true
-      },
-      youtube: {
-        hello: false,
-        connected: false
-      },
-      links: {
-        hello: false,
-        connected: false
-      },
-      photos: {
-        hello: false,
-        connected: false
-      },
-      radio: {
-        hello: false,
-        connected: false
-      },
-      music: {
-        hello: false,
-        connected: false
-      },
-      alert: {
-        hello: false,
-        connected: false
-      },
-      volume: {
-        hello: false
-      },
+      ready: false
     }
+
+    await Promise.all(this.ExtDB.map(Ext=> {
+      this.GW[Ext] = {
+        hello: false,
+        connected: false
+      }
+    }))
+
+    /* special rule for EXT-NEWPIR */
+    this.GW["EXT-NewPIR"].power = true
   },
 
   getScripts: function() { // maybe with class ?
@@ -102,6 +88,10 @@ Module.register("EXT-Gateway", {
           timer: (payload.timer && payload.timer !=0)  ? payload.timer : null
         })
         break
+      case "USER_PRESENCE":
+        if (!this.GW["EXT-NewPIR"].hello) return
+        this.GW["EXT-NewPIR"].power = payload ? true : false
+        break
     }
   },
 
@@ -115,38 +105,29 @@ Module.register("EXT-Gateway", {
     switch(status) {
       case "ASSISTANT_LISTEN":
       case "ASSISTANT_THINK":
-        if(this.GW.screen.hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
-          if (!this.GW.screen.power) this.sendNotification("EXT_SCREEN-WAKEUP")
+        if(this.GW["EXT-NewPIR"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+          if (!this.GW["EXT-NewPIR"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
           this.sendNotification("EXT_SCREEN-LOCK")
         }
-        if (this.GW.spotify.hello && this.GW.spotify.connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MIN")
-        if (this.GW.radio.hello && this.GW.radio.connected) this.sendNotification("EXT_RADIO-VOLUME_MIN")
-        if (this.GW.music.hello && this.GW.music.connected) this.sendNotification("EXT_MUSIC-VOLUME_MIN")
-        /** to code...
-        this.sendNotification("EXT_YT-CVLC_VOLUME_MIN")
-        
-        **/
+        if (this.GW["EXT-Spotify"].hello && this.GW["EXT-Spotify"].connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MIN")
+        if (this.GW["EXT-RadioPlayer"].hello && this.GW["EXT-RadioPlayer"].connected) this.sendNotification("EXT_RADIO-VOLUME_MIN")
+        if (this.GW["EXT-MusicPlayer"].hello && this.GW["EXT-MusicPlayer"].connected) this.sendNotification("EXT_MUSIC-VOLUME_MIN")
+        if (this.GW["EXT-YouTubeVLC"].hello && this.GW["EXT-YouTubeVLC"].connected) this.sendNotification("EXT_YOUTUBEVLC-VOLUME_MIN")
         break
       case "ASSISTANT_STANDBY":
-        if(this.GW.screen.hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+        if(this.GW["EXT-NewPIR"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
           this.sendNotification("EXT_SCREEN-UNLOCK") // unlock the screen
         }
-        if (this.GW.spotify.hello && this.GW.spotify.connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MAX")
-        if (this.GW.radio.hello && this.GW.radio.connected) this.sendNotification("EXT_RADIO-VOLUME_MAX")
-        if (this.GW.music.hello && this.GW.music.connected) this.sendNotification("EXT_MUSIC-VOLUME_MAX")
-        /** to code ...
-        this.sendNotification("EXT_YT-CVLC_VOLUME_MAX")
-        **/
+        if (this.GW["EXT-Spotify"].hello && this.GW["EXT-Spotify"].connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MAX")
+        if (this.GW["EXT-RadioPlayer"].hello && this.GW["EXT-RadioPlayer"].connected) this.sendNotification("EXT_RADIO-VOLUME_MAX")
+        if (this.GW["EXT-MusicPlayer"].hello && this.GW["EXT-MusicPlayer"].connected) this.sendNotification("EXT_MUSIC-VOLUME_MAX")
+        if (this.GW["EXT-YouTubeVLC"].hello && this.GW["EXT-YouTubeVLC"].connected) this.sendNotification("EXT_YOUTUBEVLC-VOLUME_MAX")
         break
       case "ASSISTANT_REPLY":
       case "ASSISTANT_CONTINUE":
       case "ASSISTANT_CONFIRMATION":
       case "ASSISTANT_ERROR":
       case "ASSISTANT_HOOK":
-        break
-      case "USER_PRESENCE":
-        if (!this.GW.screen.hello) return
-        this.GW.screen.power = payload ? true : false
         break
     }
   },
@@ -161,55 +142,69 @@ Module.register("EXT-Gateway", {
         this.helloEXT(payload)
         break
       case "EXT_SCREEN-OFF":
-        if (!this.GW.screen.hello) return console.log("[GATEWAY] Warn NewPIR don't say to me HELLO!")
-        this.GW.screen.power = false
+        if (!this.GW["EXT-NewPIR"].hello) return console.log("[GATEWAY] Warn NewPIR don't say to me HELLO!")
+        this.GW["EXT-NewPIR"].power = false
         break
       case "EXT_SCREEN-ON":
-        if (!this.GW.screen.hello) return console.log("[GATEWAY] Warn NewPIR don't say to me HELLO!")
-        this.GW.screen.power = true
+        if (!this.GW["EXT-NewPIR"].hello) return console.log("[GATEWAY] Warn NewPIR don't say to me HELLO!")
+        this.GW["EXT-NewPIR"].power = true
         break
       case "EXT_STOP":
         if (this.GW.alert.hello) this.sendNotification("EXT_ALERT", { type: "information", message: "Tous les processus Extented sont maintenant arrêtés" })
         break
       case "EXT_MUSIC-CONNECTED":
-        if (!this.GW.music.hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
-        this.connected("music")
+        if (!this.GW["EXT-MusicPlayer"].hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
+        this.connected("EXT-MusicPlayer")
         break
       case "EXT_MUSIC-DISCONNECTED":
-        if (!this.GW.music.hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
-        this.disconnected("music")
+        if (!this.GW["EXT-MusicPlayer"].hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
+        this.disconnected("EXT-MusicPlayer")
         break
       case "EXT_RADIO-CONNECTED":
-        if (!this.GW.radio.hello) return console.log("[GATEWAY] Warn RadioPlayer don't say to me HELLO!")
-        this.connected("radio")
+        if (!this.GW["EXT-RadioPlayer"].hello) return console.log("[GATEWAY] Warn RadioPlayer don't say to me HELLO!")
+        this.connected("EXT-RadioPlayer")
         break
       case "EXT_RADIO-DISCONNECTED":
-        if (!this.GW.radio.hello) return console.log("[GATEWAY] Warn RadioPlayer don't say to me HELLO!")
-        this.disconnected("radio")
+        if (!this.GW["EXT-RadioPlayer"].hello) return console.log("[GATEWAY] Warn RadioPlayer don't say to me HELLO!")
+        this.disconnected("EXT-RadioPlayer")
         break
       case "EXT_SPOTIFY-CONNECTED":
       case "EXT_SPOTIFY-DISCONNECTED":
         /* do nothing */
         break
       case "EXT_SPOTIFY-PLAYER_CONNECTED":
-        if (!this.GW.spotify.hello) return console.error("[GATEWAY] Warn Spotify don't say to me HELLO!")
-        this.connected("spotify")
+        if (!this.GW["EXT-Spotify"].hello) return console.error("[GATEWAY] Warn Spotify don't say to me HELLO!")
+        this.connected("EXT-Spotify")
         break
       case "EXT_SPOTIFY-PLAYER_DISCONNECTED":
-        if (!this.GW.spotify.hello) return console.error("[GATEWAY] Warn Spotify don't say to me HELLO!")
-        this.disconnected("spotify")
+        if (!this.GW["EXT-Spotify"].hello) return console.error("[GATEWAY] Warn Spotify don't say to me HELLO!")
+        this.disconnected("EXT-Spotify")
         break
       case "EXT_YOUTUBE-CONNECTED":
-        if (!this.GW.youtube.hello) return console.error("[GATEWAY] Warn YouTube don't say to me HELLO!")
-        this.connected("youtube")
+        if (!this.GW["EXT-YouTube"].hello) return console.error("[GATEWAY] Warn YouTube don't say to me HELLO!")
+        this.connected("EXT-YouTube")
         break
       case "EXT_YOUTUBE-DISCONNECTED":
-        if (!this.GW.youtube.hello) return console.error("[GATEWAY] Warn YouTube don't say to me HELLO!")
-        this.disconnected("youtube")
+        if (!this.GW["EXT-YouTube"].hello) return console.error("[GATEWAY] Warn YouTube don't say to me HELLO!")
+        this.disconnected("EXT-YouTube")
         break
+      case "EXT_YOUTUBEVLC-CONNECTED":
+        if (!this.GW["EXT-YouTubeVLC"].hello) return console.error("[GATEWAY] Warn YouTubeVLC don't say to me HELLO!")
+        this.connected("EXT-YouTubeVLC")
+        break
+      case "EXT_YOUTUBEVLC-DISCONNECTED":
+        if (!this.GW["EXT-YouTubeVLC"].hello) return console.error("[GATEWAY] Warn YouTubeVLC don't say to me HELLO!")
+        this.disconnected("EXT-YouTubeVLC")
+        break
+
+      /** IgnoreLand case! **/
       case "EXT_ALERT":
       case "EXT_VOLUME_SET":
+      case "EXT_YOUTUBEVLC-SEARCH":
+      case "EXT_YOUTUBE-SEARCH":
         break
+
+      /** Warn if not in db **/
       default:
         console.error("[GATEWAY] Sorry, i don't understand what is", noti, payload)
         break
@@ -219,40 +214,8 @@ Module.register("EXT-Gateway", {
   /** Activate automaticaly any plugins **/
   helloEXT: function(module) {
     switch (module) {
-      case "EXT-Spotify":
-        this.GW.spotify.hello= true
-        logGW("Hello,", module)
-        break
-      case "EXT-NewPIR":
-        this.GW.screen.hello= true
-        logGW("Hello,", module)
-        break
-      case "EXT-Links":
-        this.GW.links.hello= true
-        logGW("Hello,", module)
-        break
-      case "EXT-GooglePhotos":
-        this.GW.photos.hello= true
-        logGW("Hello,", module)
-        break
-      case "EXT-RadioPlayer":
-        this.GW.radio.hello= true
-        logGW("Hello,", module)
-        break
-      case "EXT-MusicPlayer":
-        this.GW.music.hello= true
-        logGW("Hello,", module)
-        break
-      case "EXT-YouTube":
-        this.GW.youtube.hello= true
-        logGW("Hello,", module)
-        break
-      case "EXT-Alert":
-        this.GW.alert.hello= true
-        logGW("Hello,", module)
-        break
-      case "EXT-Volume":
-        this.GW.volume.hello= true
+      case this.ExtDB.find(name => name === module): //read DB and find module
+        this.GW[module].hello= true
         logGW("Hello,", module)
         break
       default:
@@ -264,16 +227,17 @@ Module.register("EXT-Gateway", {
   /** connected rules **/
   connected: function(extName) {
     if (!this.GW.ready) return console.error("[GATEWAY] Hey!,", extName, "MMM-GoogleAssistant is not ready")
-    if(this.GW.screen.hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
-      if (!this.GW.screen.power) this.sendNotification("EXT_SCREEN-WAKEUP")
+    if(this.GW["EXT-NewPIR"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+      if (!this.GW["EXT-NewPIR"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
       this.sendNotification("EXT_SCREEN-LOCK")
     }
-    if (this.GW.spotify.hello && this.GW.spotify.connected) this.sendNotification("EXT_SPOTIFY-STOP")
-    if (this.GW.music.hello && this.GW.music.connected) this.sendNotification("EXT_MUSIC-STOP")
-    if (this.GW.radio.hello && this.GW.radio.connected) this.sendNotification("EXT_RADIO-STOP")
-    if (this.GW.youtube.hello && this.GW.youtube.connected) this.sendNotification("EXT_YOUTUBE-STOP")
-    this.GW[extName].connected = true
+    if (this.GW["EXT-Spotify"].hello && this.GW["EXT-Spotify"].connected) this.sendNotification("EXT_SPOTIFY-STOP")
+    if (this.GW["EXT-MusicPlayer"].hello && this.GW["EXT-MusicPlayer"].connected) this.sendNotification("EXT_MUSIC-STOP")
+    if (this.GW["EXT-RadioPlayer"].hello && this.GW["EXT-RadioPlayer"].connected) this.sendNotification("EXT_RADIO-STOP")
+    if (this.GW["EXT-YouTube"].hello && this.GW["EXT-YouTube"].connected) this.sendNotification("EXT_YOUTUBE-STOP")
+    if (this.GW["EXT-YouTubeVLC"].hello && this.GW["EXT-YouTubeVLC"].connected) this.sendNotification("EXT_YOUTUBEVLC-STOP")
     logGW("Connected:", extName)
+    this.GW[extName].connected = true
   },
 
   /** disconnected rules **/
@@ -282,8 +246,8 @@ Module.register("EXT-Gateway", {
     if (extName) this.GW[extName].connected = false
     // sport time ... verify if there is again an EXT module connected !
     setTimeout(()=> { // wait 1 sec before scan ...
-      if(!this.hasOwnDeepValueProperty(this.GW, "connected", true)) this.sendNotification("EXT_SCREEN-UNLOCK")
-      logGW("Disconnected", extName)
+      if(this.GW["EXT-NewPIR"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) this.sendNotification("EXT_SCREEN-UNLOCK")
+      logGW("Disconnected:", extName)
     }, 1000)
   },
 
