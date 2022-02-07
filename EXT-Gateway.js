@@ -79,7 +79,7 @@ Module.register("EXT-Gateway", {
         logGW("EXT-Gateway is ready!")
         break
       case "SHOW_ALERT": // trigger Alert to EXT-Alert module
-        if (!this.GW.alert.hello) return
+        if (!this.GW["EXT-Alert"].hello) return
         logGW("Trigger Alert from:", payload)
         this.sendNotification("EXT_ALERT", {
           message: payload.message,
@@ -150,7 +150,7 @@ Module.register("EXT-Gateway", {
         this.GW["EXT-NewPIR"].power = true
         break
       case "EXT_STOP":
-        if (this.GW.alert.hello) this.sendNotification("EXT_ALERT", { type: "information", message: "Tous les processus Extented sont maintenant arrêtés" })
+        if (this.GW["EXT-Alert"].hello) this.sendNotification("EXT_ALERT", { type: "information", message: "Tous les processus Extented sont maintenant arrêtés" })
         break
       case "EXT_MUSIC-CONNECTED":
         if (!this.GW["EXT-MusicPlayer"].hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
