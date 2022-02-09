@@ -1,15 +1,15 @@
 /**
- ** Module : EXT-Gateway
+ ** Module : Gateway
  ** @bugsounet ©02-2022
  ** support: http://forum.bugsounet.fr
  **/
 
 logGW = (...args) => { /* do nothing */ }
 
-Module.register("EXT-Gateway", {
+Module.register("Gateway", {
   defaults: {
     debug: true,
-    /** to code ... something like this for other modules
+    /** to code ... something like this for make own EXT modules
     newExt: [
       {
         notification: "Working", // received noti
@@ -39,7 +39,9 @@ Module.register("EXT-Gateway", {
       "EXT-RadioPlayer",
       "EXT-MusicPlayer",
       "EXT-Alert",
-      "EXT-Volume"
+      "EXT-Volume",
+      "EXT-Welcome",
+      "EXT-YouTubeCast"
     ]
 
     this.GW = {
@@ -76,7 +78,7 @@ Module.register("EXT-Gateway", {
         break
       case "GA_READY":
         this.GW.ready = true
-        logGW("EXT-Gateway is ready!")
+        logGW("Gateway is ready too!")
         break
       case "SHOW_ALERT": // trigger Alert to EXT-Alert module
         if (!this.GW["EXT-Alert"].hello) return
@@ -196,17 +198,18 @@ Module.register("EXT-Gateway", {
         if (!this.GW["EXT-YouTubeVLC"].hello) return console.error("[GATEWAY] Warn YouTubeVLC don't say to me HELLO!")
         this.disconnected("EXT-YouTubeVLC")
         break
-
-      /** IgnoreLand case! **/
-      case "EXT_ALERT":
-      case "EXT_VOLUME_SET":
-      case "EXT_YOUTUBEVLC-SEARCH":
-      case "EXT_YOUTUBE-SEARCH":
+      case "EXT_YOUTUBECAST-CONNECTED":
+        if (!this.GW["EXT-YouTubeCast"].hello) return console.error("[GATEWAY] Warn YouTubeCast don't say to me HELLO!")
+        this.connected("EXT-YouTubeCast")
+        break
+      case "EXT_YOUTUBECAST-DISCONNECTED":
+        if (!this.GW["EXT-YouTubeCast"].hello) return console.error("[GATEWAY] Warn YouTubeCast don't say to me HELLO!")
+        this.disconnected("EXT-YouTubeCast")
         break
 
       /** Warn if not in db **/
       default:
-        console.error("[GATEWAY] Sorry, i don't understand what is", noti, payload)
+        logGW("Sorry, i don't understand what is", noti, payload ? payload : "")
         break
     }
   },
@@ -236,6 +239,7 @@ Module.register("EXT-Gateway", {
     if (this.GW["EXT-RadioPlayer"].hello && this.GW["EXT-RadioPlayer"].connected) this.sendNotification("EXT_RADIO-STOP")
     if (this.GW["EXT-YouTube"].hello && this.GW["EXT-YouTube"].connected) this.sendNotification("EXT_YOUTUBE-STOP")
     if (this.GW["EXT-YouTubeVLC"].hello && this.GW["EXT-YouTubeVLC"].connected) this.sendNotification("EXT_YOUTUBEVLC-STOP")
+    if (this.GW["EXT-YouTubeCast"].hello && this.GW["EXT-YouTubeCast"].connected) this.sendNotification("EXT_YOUTUBECAT-STOP")
     logGW("Connected:", extName)
     this.GW[extName].connected = true
   },

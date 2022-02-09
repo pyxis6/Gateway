@@ -11,7 +11,7 @@ module.exports = NodeHelper.create({
   socketNotificationReceived: function (noti, payload) {
     switch (noti) {
       case "INIT":
-        console.log("[GATEWAY] EXT-Gateway Version:", require('./package.json').version, "rev:", require('./package.json').rev)
+        console.log("[GATEWAY] Gateway Version:", require('./package.json').version, "rev:", require('./package.json').rev)
         this.initialize(payload)
       break
     }
