@@ -34,14 +34,15 @@ Module.register("Gateway", {
       "EXT-NewPIR",
       "EXT-YouTube",
       "EXT-YouTubeVLC",
-      "EXT-Links",
       "EXT-GooglePhotos",
       "EXT-RadioPlayer",
       "EXT-MusicPlayer",
       "EXT-Alert",
       "EXT-Volume",
       "EXT-Welcome",
-      "EXT-YouTubeCast"
+      "EXT-YouTubeCast",
+      "EXT-Browser",
+      "EXT-Internet"
     ]
 
     this.GW = {
@@ -55,8 +56,19 @@ Module.register("Gateway", {
       }
     }))
 
-    /* special rule for EXT-NEWPIR */
+    /** special rule for EXT-NEWPIR **/
     this.GW["EXT-NewPIR"].power = true
+
+    this.urls = {
+      photos: {
+        urls: null,
+        length: 0
+      },
+      links: {
+        urls: null,
+        length: 0
+      }
+    }
   },
 
   getScripts: function() { // maybe with class ?
@@ -79,6 +91,13 @@ Module.register("Gateway", {
       case "GA_READY":
         this.GW.ready = true
         logGW("Gateway is ready too!")
+       /* 
+        this.notificationReceived("EXT_GATEWAY", {
+          urls: ["https://www.youtube.com/watch?v=GjMufmGugl4"],
+          //urls: ["https://open.spotify.com/track/4fouWK6XVHhzl78KzQ1UjL?si=c917f420751a4fa1"],
+          photos: []
+        })
+        */
         break
       case "SHOW_ALERT": // trigger Alert to EXT-Alert module
         if (!this.GW["EXT-Alert"].hello) return
@@ -118,7 +137,7 @@ Module.register("Gateway", {
         break
       case "ASSISTANT_STANDBY":
         if(this.GW["EXT-NewPIR"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
-          this.sendNotification("EXT_SCREEN-UNLOCK") // unlock the screen
+          this.sendNotification("EXT_SCREEN-UNLOCK")
         }
         if (this.GW["EXT-Spotify"].hello && this.GW["EXT-Spotify"].connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MAX")
         if (this.GW["EXT-RadioPlayer"].hello && this.GW["EXT-RadioPlayer"].connected) this.sendNotification("EXT_RADIO-VOLUME_MAX")
@@ -142,6 +161,9 @@ Module.register("Gateway", {
     switch(noti) {
       case "EXT_HELLO":
         this.helloEXT(payload)
+        break
+      case "EXT_GATEWAY":
+        this.gatewayEXT(payload)
         break
       case "EXT_SCREEN-OFF":
         if (!this.GW["EXT-NewPIR"].hello) return console.log("[GATEWAY] Warn NewPIR don't say to me HELLO!")
@@ -172,7 +194,7 @@ Module.register("Gateway", {
         break
       case "EXT_SPOTIFY-CONNECTED":
       case "EXT_SPOTIFY-DISCONNECTED":
-        /* do nothing */
+        /* do nothing because it's just the player! */
         break
       case "EXT_SPOTIFY-PLAYER_CONNECTED":
         if (!this.GW["EXT-Spotify"].hello) return console.error("[GATEWAY] Warn Spotify don't say to me HELLO!")
@@ -206,7 +228,14 @@ Module.register("Gateway", {
         if (!this.GW["EXT-YouTubeCast"].hello) return console.error("[GATEWAY] Warn YouTubeCast don't say to me HELLO!")
         this.disconnected("EXT-YouTubeCast")
         break
-
+      case "EXT_BROWSER-CONNECTED":
+        if (!this.GW["EXT-Browser"].hello) return console.error("[GATEWAY] Warn Browser don't say to me HELLO!")
+        this.connected("EXT-Browser")
+        break
+      case "EXT_BROWSER-DISCONNECTED":
+        if (!this.GW["EXT-Browser"].hello) return console.error("[GATEWAY] Warn Browser don't say to me HELLO!")
+        this.disconnected("EXT-Browser")
+        break
       /** Warn if not in db **/
       default:
         logGW("Sorry, i don't understand what is", noti, payload ? payload : "")
@@ -234,13 +263,22 @@ Module.register("Gateway", {
       if (!this.GW["EXT-NewPIR"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
       this.sendNotification("EXT_SCREEN-LOCK")
     }
+
+    if (this.browserOrPhoto()) {
+      logGW("Connected:", extName, "[browserOrPhoto Mode]")
+      if (this.GW["EXT-YouTubeVLC"].hello && this.GW["EXT-YouTubeVLC"].connected) this.sendNotification("EXT_YOUTUBEVLC-STOP")
+      this.GW[extName].connected = true
+      return
+    }
+
     if (this.GW["EXT-Spotify"].hello && this.GW["EXT-Spotify"].connected) this.sendNotification("EXT_SPOTIFY-STOP")
     if (this.GW["EXT-MusicPlayer"].hello && this.GW["EXT-MusicPlayer"].connected) this.sendNotification("EXT_MUSIC-STOP")
     if (this.GW["EXT-RadioPlayer"].hello && this.GW["EXT-RadioPlayer"].connected) this.sendNotification("EXT_RADIO-STOP")
     if (this.GW["EXT-YouTube"].hello && this.GW["EXT-YouTube"].connected) this.sendNotification("EXT_YOUTUBE-STOP")
     if (this.GW["EXT-YouTubeVLC"].hello && this.GW["EXT-YouTubeVLC"].connected) this.sendNotification("EXT_YOUTUBEVLC-STOP")
-    if (this.GW["EXT-YouTubeCast"].hello && this.GW["EXT-YouTubeCast"].connected) this.sendNotification("EXT_YOUTUBECAT-STOP")
+    if (this.GW["EXT-YouTubeCast"].hello && this.GW["EXT-YouTubeCast"].connected) this.sendNotification("EXT_YOUTUBECAST-STOP")
     logGW("Connected:", extName)
+    logGW("Debug:", this.GW)
     this.GW[extName].connected = true
   },
 
@@ -253,6 +291,15 @@ Module.register("Gateway", {
       if(this.GW["EXT-NewPIR"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) this.sendNotification("EXT_SCREEN-UNLOCK")
       logGW("Disconnected:", extName)
     }, 1000)
+  },
+
+  browserOrPhoto: function() {
+    if (this.GW["EXT-Browser"].hello && this.GW["EXT-Browser"].connected) {
+        //(this.GW["EXT-Photos"].hello && this.GW["EXT-Photos"].connected)) {
+          console.log("browserOrPhoto", true)
+          return true
+    }
+    return false
   },
 
   /***************/
@@ -279,5 +326,92 @@ Module.register("Gateway", {
       }
     }
     return false
+  },
+
+  /**********************/
+  /** Scan GA Response **/
+  /**********************/
+  gatewayEXT: function(response) {
+    if (!response) return // @todo scan if type array ??
+    logGW("Response Scan")
+    let tmp = {
+      photos: {
+        urls: response.photos,
+        length: response.photos.length
+      },
+      links: {
+        urls: response.urls,
+        length: response.urls.length
+      }
+    }
+
+    // the show must go on !
+    this.urls = configMerge({}, this.urls, tmp)
+    if(this.urls.photos.length > 0) {
+      // launch ext-photo ...
+    }
+    else if (this.urls.links.length > 0) {
+      this.urlsScan()
+    }
+    logGW("Response Structure:", this.urls)
+  },
+
+  /** urls scan : dispatch url, youtube, spotify **/
+  /** use the FIRST discover link only **/
+  urlsScan: function() {
+    var firstURL = this.urls.links.urls[0]
+
+    /** YouTube RegExp **/
+    var YouTubeLink = new RegExp("youtube\.com\/([a-z]+)\\?([a-z]+)\=([0-9a-zA-Z\-\_]+)", "ig")
+    /** Scan Youtube Link **/
+    var YouTube = YouTubeLink.exec(firstURL)
+
+    if (YouTube) {
+      let Type
+      if (YouTube[1] == "watch") Type = "id"
+      if (YouTube[1] == "playlist") Type = "playlist"
+      if (!Type) return console.log("[GA:EXT:YouTube] Unknow Type !" , YouTube)
+      if (this.GW["EXT-YouTube"].hello) {
+        if (Type == "playlist") {
+          this.sendNotification("EXT_ALERT",{
+            message: "EXT_YOUTUBE don't support playlist",
+            timer: 5000,
+            type: "warning"
+          })
+          return
+        }
+        this.sendNotification("EXT_YOUTUBE-PLAY", YouTube[3])
+      }
+      else if (this.GW["EXT-YouTubeVLC"].hello) {
+        this.sendNotification("EXT_YOUTUBEVLC-PLAY", firstURL)
+      }
+      return
+    }
+
+    /** scan spotify links **/
+    /** Spotify RegExp **/
+    var SpotifyLink = new RegExp("open\.spotify\.com\/([a-z]+)\/([0-9a-zA-Z\-\_]+)", "ig")
+    var Spotify = SpotifyLink.exec(firstURL)
+    if (Spotify) {
+      let type = Spotify[1]
+      let id = Spotify[2]
+      if (this.GW["EXT-Spotify"].hello) {
+        if (type == "track") {
+          // don't know why tracks works only with uris !?
+          this.sendNotification("EXT_SPOTIFY-PLAY", {"uris": ["spotify:track:" + id ]})
+        }
+        else {
+          this.sendSocketNotification("EXT_SPOTIFY-PLAY", {"context_uri": "spotify:"+ type + ":" + id})
+        }
+      }
+      return
+    }
+    // send to Browser
+    if (this.GW["EXT-Browser"].hello) {
+      // force connexion for rules (don't turn off other EXT)
+      this.GW["EXT-Browser"].connected = true
+      this.sendNotification("EXT_BROWSER-OPEN", firstURL)
+      logGW("Forced connected:", extName)
+    }
   }
 })
