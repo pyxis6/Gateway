@@ -30,19 +30,28 @@ Module.register("Gateway", {
   start: async function () {
     if (this.config.debug) logGW = (...args) => { console.log("[GATEWAY]", ...args) }
     this.ExtDB = [
-      "EXT-Spotify",
-      "EXT-NewPIR",
-      "EXT-YouTube",
-      "EXT-YouTubeVLC",
-      "EXT-GooglePhotos",
-      "EXT-RadioPlayer",
-      "EXT-MusicPlayer",
       "EXT-Alert",
+      "EXT-Backgound",
+      "EXT-Browser",
+      "EXT-Deezer",
+      "EXT-FreeboxTV",
+      "EXT-GooglePhotos",
+      "EXT-Governor",
+      "EXT-Internet",
+      "EXT-Led",
+      "EXT-MusicPlayer",
+      "EXT-Photos",
+      "EXT-Pir",
+      "EXT-RadioPlayer",
+      "EXT-Setup",
+      "EXT-Screen",
+      "EXT-ScreenManager",
+      "EXT-Spotify",
       "EXT-Volume",
       "EXT-Welcome",
+      "EXT-YouTube",
       "EXT-YouTubeCast",
-      "EXT-Browser",
-      "EXT-Internet"
+      "EXT-YouTubeVLC"
     ]
 
     this.GW = {
@@ -57,7 +66,7 @@ Module.register("Gateway", {
     }))
 
     /** special rule for EXT-NEWPIR **/
-    this.GW["EXT-NewPIR"].power = true
+    this.GW["EXT-Screen"].power = true
 
     this.urls = {
       photos: {
@@ -71,7 +80,7 @@ Module.register("Gateway", {
     }
   },
 
-  getScripts: function() { // maybe with class ?
+  getScripts: function() {
     return [ ]
   },
 
@@ -91,13 +100,13 @@ Module.register("Gateway", {
       case "GA_READY":
         this.GW.ready = true
         logGW("Gateway is ready too!")
-       /* 
+/** for testing
         this.notificationReceived("EXT_GATEWAY", {
-          urls: ["https://www.youtube.com/watch?v=GjMufmGugl4"],
+          //urls: ["https://www.youtube.com/watch?v=GjMufmGugl4"],
           //urls: ["https://open.spotify.com/track/4fouWK6XVHhzl78KzQ1UjL?si=c917f420751a4fa1"],
-          photos: []
+          //photos: []
         })
-        */
+**/
         break
       case "SHOW_ALERT": // trigger Alert to EXT-Alert module
         if (!this.GW["EXT-Alert"].hello) return
@@ -110,8 +119,8 @@ Module.register("Gateway", {
         })
         break
       case "USER_PRESENCE":
-        if (!this.GW["EXT-NewPIR"].hello) return
-        this.GW["EXT-NewPIR"].power = payload ? true : false
+        if (!this.GW["EXT-Screen"].hello) return
+        this.GW["EXT-Screen"].power = payload ? true : false
         break
     }
   },
@@ -126,8 +135,8 @@ Module.register("Gateway", {
     switch(status) {
       case "ASSISTANT_LISTEN":
       case "ASSISTANT_THINK":
-        if(this.GW["EXT-NewPIR"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
-          if (!this.GW["EXT-NewPIR"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
+        if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+          if (!this.GW["EXT-Screen"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
           this.sendNotification("EXT_SCREEN-LOCK")
         }
         if (this.GW["EXT-Spotify"].hello && this.GW["EXT-Spotify"].connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MIN")
@@ -136,7 +145,7 @@ Module.register("Gateway", {
         if (this.GW["EXT-YouTubeVLC"].hello && this.GW["EXT-YouTubeVLC"].connected) this.sendNotification("EXT_YOUTUBEVLC-VOLUME_MIN")
         break
       case "ASSISTANT_STANDBY":
-        if(this.GW["EXT-NewPIR"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+        if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
           this.sendNotification("EXT_SCREEN-UNLOCK")
         }
         if (this.GW["EXT-Spotify"].hello && this.GW["EXT-Spotify"].connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MAX")
@@ -166,15 +175,14 @@ Module.register("Gateway", {
         this.gatewayEXT(payload)
         break
       case "EXT_SCREEN-OFF":
-        if (!this.GW["EXT-NewPIR"].hello) return console.log("[GATEWAY] Warn NewPIR don't say to me HELLO!")
-        this.GW["EXT-NewPIR"].power = false
+        if (!this.GW["EXT-Screen"].hello) return console.log("[GATEWAY] Warn Screen don't say to me HELLO!")
+        this.GW["EXT-Screen"].power = false
         break
       case "EXT_SCREEN-ON":
-        if (!this.GW["EXT-NewPIR"].hello) return console.log("[GATEWAY] Warn NewPIR don't say to me HELLO!")
-        this.GW["EXT-NewPIR"].power = true
+        if (!this.GW["EXT-Screen"].hello) return console.log("[GATEWAY] Warn Screen don't say to me HELLO!")
+        this.GW["EXT-Screen"].power = true
         break
       case "EXT_STOP":
-        if (this.GW["EXT-Alert"].hello) this.sendNotification("EXT_ALERT", { type: "information", message: "Tous les processus Extented sont maintenant arrêtés" })
         break
       case "EXT_MUSIC-CONNECTED":
         if (!this.GW["EXT-MusicPlayer"].hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
@@ -259,8 +267,8 @@ Module.register("Gateway", {
   /** connected rules **/
   connected: function(extName) {
     if (!this.GW.ready) return console.error("[GATEWAY] Hey!,", extName, "MMM-GoogleAssistant is not ready")
-    if(this.GW["EXT-NewPIR"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
-      if (!this.GW["EXT-NewPIR"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
+    if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+      if (!this.GW["EXT-Screen"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
       this.sendNotification("EXT_SCREEN-LOCK")
     }
 
@@ -288,7 +296,7 @@ Module.register("Gateway", {
     if (extName) this.GW[extName].connected = false
     // sport time ... verify if there is again an EXT module connected !
     setTimeout(()=> { // wait 1 sec before scan ...
-      if(this.GW["EXT-NewPIR"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) this.sendNotification("EXT_SCREEN-UNLOCK")
+      if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) this.sendNotification("EXT_SCREEN-UNLOCK")
       logGW("Disconnected:", extName)
     }, 1000)
   },
@@ -336,19 +344,19 @@ Module.register("Gateway", {
     logGW("Response Scan")
     let tmp = {
       photos: {
-        urls: response.photos,
-        length: response.photos.length
+        urls: response.photos && response.photos.length ? response.photos : [],
+        length: response.photos && response.photos.length ? response.photos.length : 0
       },
       links: {
-        urls: response.urls,
-        length: response.urls.length
+        urls: response.urls && response.urls.length ?  response.urls : [],
+        length: response.urls && response.urls.length ? response.urls.length : 0
       }
     }
 
     // the show must go on !
     this.urls = configMerge({}, this.urls, tmp)
-    if(this.urls.photos.length > 0) {
-      // launch ext-photo ...
+    if(this.urls.photos.length > 0 && this.GW["EXT-Photos"].hello) {
+      this.sendNotification("EXT_PHOTOS-OPEN", this.urls.photos.urls)
     }
     else if (this.urls.links.length > 0) {
       this.urlsScan()
