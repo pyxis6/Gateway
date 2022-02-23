@@ -31,7 +31,7 @@ Module.register("Gateway", {
     if (this.config.debug) logGW = (...args) => { console.log("[GATEWAY]", ...args) }
     this.ExtDB = [
       "EXT-Alert",
-      "EXT-Backgound",
+      "EXT-Background",
       "EXT-Browser",
       "EXT-Deezer",
       "EXT-FreeboxTV",
@@ -137,7 +137,7 @@ Module.register("Gateway", {
       case "ASSISTANT_THINK":
         if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
           if (!this.GW["EXT-Screen"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
-          this.sendNotification("EXT_SCREEN-LOCK")
+          this.sendNotification("EXT_SCREEN-LOCK", { show: true } )
         }
         if (this.GW["EXT-Spotify"].hello && this.GW["EXT-Spotify"].connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MIN")
         if (this.GW["EXT-RadioPlayer"].hello && this.GW["EXT-RadioPlayer"].connected) this.sendNotification("EXT_RADIO-VOLUME_MIN")
@@ -146,7 +146,7 @@ Module.register("Gateway", {
         break
       case "ASSISTANT_STANDBY":
         if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
-          this.sendNotification("EXT_SCREEN-UNLOCK")
+          this.sendNotification("EXT_SCREEN-UNLOCK", { show: true } )
         }
         if (this.GW["EXT-Spotify"].hello && this.GW["EXT-Spotify"].connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MAX")
         if (this.GW["EXT-RadioPlayer"].hello && this.GW["EXT-RadioPlayer"].connected) this.sendNotification("EXT_RADIO-VOLUME_MAX")
@@ -243,6 +243,22 @@ Module.register("Gateway", {
       case "EXT_BROWSER-DISCONNECTED":
         if (!this.GW["EXT-Browser"].hello) return console.error("[GATEWAY] Warn Browser don't say to me HELLO!")
         this.disconnected("EXT-Browser")
+        break
+      case "EXT_FREEBOXTV-CONNECTED":
+        if (!this.GW["EXT-FreeboxTV"].hello) return console.error("[GATEWAY] Warn FreeboxTV don't say to me HELLO!")
+        this.connected("EXT-FreeboxTV")
+        break
+      case "EXT_FREEBOXTV-DISCONNECTED":
+        if (!this.GW["EXT-FreeboxTV"].hello) return console.error("[GATEWAY] Warn FreeboxTV don't say to me HELLO!")
+        this.disconnected("EXT-FreeboxTV")
+        break
+      case "EXT_PHOTOS-CONNECTED":
+        if (!this.GW["EXT-Photos"].hello) return console.error("[GATEWAY] Warn Photos don't say to me HELLO!")
+        this.connected("EXT-Photos")
+        break
+      case "EXT_PHOTOS-DISCONNECTED":
+        if (!this.GW["EXT-Photos"].hello) return console.error("[GATEWAY] Warn Photos don't say to me HELLO!")
+        this.disconnected("EXT-Photos")
         break
       /** Warn if not in db **/
       default:
