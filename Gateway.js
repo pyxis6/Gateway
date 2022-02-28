@@ -8,7 +8,7 @@ logGW = (...args) => { /* do nothing */ }
 
 Module.register("Gateway", {
   defaults: {
-    debug: true,
+    debug: false,
     /** to code ... something like this for make own EXT modules
     newExt: [
       {
@@ -47,6 +47,7 @@ Module.register("Gateway", {
       "EXT-Screen",
       "EXT-ScreenManager",
       "EXT-Spotify",
+      "EXT-UpdateNotification",
       "EXT-Volume",
       "EXT-Welcome",
       "EXT-YouTube",
@@ -143,6 +144,7 @@ Module.register("Gateway", {
         if (this.GW["EXT-RadioPlayer"].hello && this.GW["EXT-RadioPlayer"].connected) this.sendNotification("EXT_RADIO-VOLUME_MIN")
         if (this.GW["EXT-MusicPlayer"].hello && this.GW["EXT-MusicPlayer"].connected) this.sendNotification("EXT_MUSIC-VOLUME_MIN")
         if (this.GW["EXT-YouTubeVLC"].hello && this.GW["EXT-YouTubeVLC"].connected) this.sendNotification("EXT_YOUTUBEVLC-VOLUME_MIN")
+        if (this.GW["EXT-FreeboxTV"].hello && this.GW["EXT-FreeboxTV"].connected) this.sendNotification("EXT-FREEBOXTV-VOLUME_MIN")
         break
       case "ASSISTANT_STANDBY":
         if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
@@ -152,6 +154,7 @@ Module.register("Gateway", {
         if (this.GW["EXT-RadioPlayer"].hello && this.GW["EXT-RadioPlayer"].connected) this.sendNotification("EXT_RADIO-VOLUME_MAX")
         if (this.GW["EXT-MusicPlayer"].hello && this.GW["EXT-MusicPlayer"].connected) this.sendNotification("EXT_MUSIC-VOLUME_MAX")
         if (this.GW["EXT-YouTubeVLC"].hello && this.GW["EXT-YouTubeVLC"].connected) this.sendNotification("EXT_YOUTUBEVLC-VOLUME_MAX")
+        if (this.GW["EXT-FreeboxTV"].hello && this.GW["EXT-FreeboxTV"].connected) this.sendNotification("EXT-FREEBOXTV-VOLUME_MAX")
         break
       case "ASSISTANT_REPLY":
       case "ASSISTANT_CONTINUE":
@@ -273,6 +276,7 @@ Module.register("Gateway", {
       case this.ExtDB.find(name => name === module): //read DB and find module
         this.GW[module].hello= true
         logGW("Hello,", module)
+        if (module == "EXT-Background") this.sendNotification("GA_FORCE_FULLSCREEN")
         break
       default:
         console.error("[GATEWAY] Hi,", module, "what can i do for you ?")
@@ -435,7 +439,7 @@ Module.register("Gateway", {
       // force connexion for rules (don't turn off other EXT)
       this.GW["EXT-Browser"].connected = true
       this.sendNotification("EXT_BROWSER-OPEN", firstURL)
-      logGW("Forced connected:", extName)
+      logGW("Forced connected: EXT-Browser")
     }
   }
 })
