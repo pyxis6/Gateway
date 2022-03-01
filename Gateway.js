@@ -98,9 +98,10 @@ Module.register("Gateway", {
       case "DOM_OBJECTS_CREATED":
         this.sendSocketNotification("INIT", this.config)
         break
-      case "GA_READY":
-        this.GW.ready = true
-        logGW("Gateway is ready too!")
+      case "GAv4_READY":
+        if (sender.name == "MMM-GoogleAssistant") {
+          this.GW.ready = true
+          logGW("Gateway is ready too!")
 /** for testing
         this.notificationReceived("EXT_GATEWAY", {
           //urls: ["https://www.youtube.com/watch?v=GjMufmGugl4"],
@@ -108,6 +109,9 @@ Module.register("Gateway", {
           //photos: []
         })
 **/
+        } else {
+          console.error("[GATEWAY]", this.sender.name, "Don't try to enforce my rules!")
+        }
         break
       case "SHOW_ALERT": // trigger Alert to EXT-Alert module
         if (!this.GW["EXT-Alert"].hello) return
