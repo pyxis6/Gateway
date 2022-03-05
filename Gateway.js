@@ -8,23 +8,7 @@ logGW = (...args) => { /* do nothing */ }
 
 Module.register("Gateway", {
   defaults: {
-    debug: false,
-    /** to code ... something like this for make own EXT modules
-    newExt: [
-      {
-        notification: "Working", // received noti
-        payload: null, // received payload
-        screenLock: true,  // lock the screen
-        stop: true // stop all EXT module
-      },
-      {
-        notification: "NotWorking",
-        payload: null,
-        screenLock: false,
-        stop: false
-      },
-    ]
-    **/
+    debug: false
   },
 
   start: async function () {
@@ -105,13 +89,6 @@ Module.register("Gateway", {
         if (sender.name == "MMM-GoogleAssistant") {
           this.GW.ready = true
           logGW("Gateway is ready too!")
-/** for testing
-        this.notificationReceived("EXT_GATEWAY", {
-          //urls: ["https://www.youtube.com/watch?v=GjMufmGugl4"],
-          //urls: ["https://open.spotify.com/track/4fouWK6XVHhzl78KzQ1UjL?si=c917f420751a4fa1"],
-          //photos: []
-        })
-**/
         } else {
           console.error("[GATEWAY]", this.sender.name, "Don't try to enforce my rules!")
         }
@@ -283,7 +260,7 @@ Module.register("Gateway", {
       case this.ExtDB.find(name => name === module): //read DB and find module
         this.GW[module].hello= true
         logGW("Hello,", module)
-        if (module == "EXT-Background") this.sendNotification("GA_FORCE_FULLSCREEN")
+        if (module == "EXT-Background") this.sendNotification("GAv4_FORCE_FULLSCREEN")
         break
       default:
         console.error("[GATEWAY] Hi,", module, "what can i do for you ?")
