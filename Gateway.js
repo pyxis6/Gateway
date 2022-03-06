@@ -14,23 +14,23 @@ Module.register("Gateway", {
   start: async function () {
     if (this.config.debug) logGW = (...args) => { console.log("[GATEWAY]", ...args) }
     this.ExtDB = [
-      "EXT-Alert",
-      "EXT-Background",
-      "EXT-Browser",
-      "EXT-Deezer",
-      "EXT-Detector",
-      "EXT-FreeboxTV",
-      "EXT-GooglePhotos",
-      "EXT-Governor",
-      "EXT-Internet",
-      "EXT-Led",
+      "EXT-Alert", // done
+      "EXT-Background", //done
+      "EXT-Browser", //done
+      "EXT-Deezer", // not coded
+      "EXT-Detector", //done
+      "EXT-FreeboxTV", //done
+      "EXT-GooglePhotos", //done
+      "EXT-Governor", //done
+      "EXT-Internet", //done
+      "EXT-Led", // not coded
       "EXT-Librespot",
       "EXT-MusicPlayer",
       "EXT-Photos",
       "EXT-Pir",
       "EXT-RadioPlayer",
       "EXT-Raspotify",
-      "EXT-Setup",
+      "EXT-Setup", // not coded
       "EXT-Screen",
       "EXT-ScreenManager",
       "EXT-Spotify",
@@ -53,7 +53,7 @@ Module.register("Gateway", {
       }
     }))
 
-    /** special rule for EXT-NEWPIR **/
+    /** special rules **/
     this.GW["EXT-Screen"].power = true
 
     this.urls = {
@@ -246,6 +246,16 @@ Module.register("Gateway", {
       case "EXT_PHOTOS-DISCONNECTED":
         if (!this.GW["EXT-Photos"].hello) return console.error("[GATEWAY] Warn Photos don't say to me HELLO!")
         this.disconnected("EXT-Photos")
+        break
+      case "EXT_INTERNET-DOWN":
+        if (!this.GW["EXT-Internet"].hello) return console.error("[GATEWAY] Warn Internet don't say to me HELLO!")
+        if (this.GW["EXT-Detector"].hello) this.sendNotification("EXT_DETECTOR-STOP")
+        if (this.GW["EXT-Spotify"].hello) this.sendNotification("EXT_SPOTIFY-MAIN_STOP")
+        break
+      case "EXT_INTERNET-UP":
+        if (!this.GW["EXT-Internet"].hello) return console.error("[GATEWAY] Warn Internet don't say to me HELLO!")
+        if (this.GW["EXT-Detector"].hello) this.sendNotification("EXT_DETECTOR-START")
+        if (this.GW["EXT-Spotify"].hello) this.sendNotification("EXT_SPOTIFY-MAIN_START")
         break
       /** Warn if not in db **/
       default:
