@@ -1,7 +1,7 @@
 /**
  ** Module : Gateway
- ** @bugsounet ©02-2022
- ** support: http://forum.bugsounet.fr
+ ** @bugsounet ©03-2022
+ ** support: https://forum.bugsounet.fr
  **/
 
 logGW = (...args) => { /* do nothing */ }
@@ -24,17 +24,17 @@ Module.register("Gateway", {
       "EXT-Governor",
       "EXT-Internet",
       "EXT-Led", // not coded
-      "EXT-Librespot", // under coding
-      "EXT-MusicPlayer", // ready for release
+      "EXT-Librespot", // under coding (missing installer)
+      "EXT-MusicPlayer",
       "EXT-Photos",
       "EXT-Pir",
-      "EXT-RadioPlayer", // to finish
-      "EXT-Raspotify", // under Coding
+      "EXT-RadioPlayer", // to finish (missing installer)
+      "EXT-Raspotify", // under Coding (missing full installer)
       "EXT-Setup", // not coded
       "EXT-Screen",
-      "EXT-ScreenManager", //under coding...
-      "EXT-Spotify", //under coding...
-      "EXT-UpdateNotification", // under coding...
+      "EXT-ScreenManager",
+      "EXT-Spotify", //under coding...  (need to code fullscreen and lyrics)
+      "EXT-UpdateNotification", // under coding... (review notifications displayer)
       "EXT-Volume",
       "EXT-Welcome",
       "EXT-YouTube",
