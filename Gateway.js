@@ -24,7 +24,7 @@ Module.register("Gateway", {
       "EXT-Governor",
       "EXT-Internet",
       "EXT-Led", // not coded
-      "EXT-Librespot", // under coding (missing installer)
+      "EXT-Librespot",
       "EXT-MusicPlayer",
       "EXT-Photos",
       "EXT-Pir",
@@ -33,8 +33,9 @@ Module.register("Gateway", {
       "EXT-Setup", // not coded
       "EXT-Screen",
       "EXT-ScreenManager",
-      "EXT-Spotify", //under coding...  (need to code fullscreen and lyrics)
-      "EXT-UpdateNotification", // under coding... (review notifications displayer)
+      "EXT-ScreenTouch",
+      "EXT-Spotify",
+      "EXT-UpdateNotification",
       "EXT-Volume",
       "EXT-Welcome",
       "EXT-YouTube",
@@ -318,8 +319,8 @@ Module.register("Gateway", {
   },
 
   browserOrPhoto: function() {
-    if (this.GW["EXT-Browser"].hello && this.GW["EXT-Browser"].connected) {
-        //(this.GW["EXT-Photos"].hello && this.GW["EXT-Photos"].connected)) {
+    if ((this.GW["EXT-Browser"].hello && this.GW["EXT-Browser"].connected) ||
+        (this.GW["EXT-Photos"].hello && this.GW["EXT-Photos"].connected)) {
           console.log("browserOrPhoto", true)
           return true
     }
@@ -371,8 +372,10 @@ Module.register("Gateway", {
 
     // the show must go on !
     this.urls = configMerge({}, this.urls, tmp)
-    if(this.urls.photos.length > 0 && this.GW["EXT-Photos"].hello) {
+    if (this.urls.photos.length > 0 && this.GW["EXT-Photos"].hello) {
+      this.GW["EXT-Photos"].connected = true
       this.sendNotification("EXT_PHOTOS-OPEN", this.urls.photos.urls)
+      logGW("Forced connected: EXT-Photos")
     }
     else if (this.urls.links.length > 0) {
       this.urlsScan()
