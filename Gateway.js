@@ -428,7 +428,7 @@ Module.register("Gateway", {
           this.sendNotification("EXT_SPOTIFY-PLAY", {"uris": ["spotify:track:" + id ]})
         }
         else {
-          this.sendSocketNotification("EXT_SPOTIFY-PLAY", {"context_uri": "spotify:"+ type + ":" + id})
+          this.sendNotification("EXT_SPOTIFY-PLAY", {"context_uri": "spotify:"+ type + ":" + id})
         }
       }
       return
