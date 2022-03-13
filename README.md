@@ -1,6 +1,6 @@
 # Gateway
 
-`MMM-GoogleAssistant` v4 need an gateway for comunicate with plugins.
+`MMM-GoogleAssistant` v4 need an gateway for comunicate with plugins.<br>
 So `Gateway` will doing this job !
 
 # Why `Gateway` is needed ?
