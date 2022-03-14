@@ -24,7 +24,7 @@ Module.register("Gateway", {
       "EXT-Governor",
       "EXT-Internet",
       "EXT-Led", // not coded
-      "EXT-Librespot",
+      "EXT-Librespot", // under coding (missing installer)
       "EXT-MusicPlayer",
       "EXT-Photos",
       "EXT-Pir",
@@ -34,7 +34,7 @@ Module.register("Gateway", {
       "EXT-Screen",
       "EXT-ScreenManager",
       "EXT-ScreenTouch",
-      "EXT-Spotify",
+      "EXT-Spotify", //under coding...  (need to code fullscreen and lyrics)
       "EXT-UpdateNotification",
       "EXT-Volume",
       "EXT-Welcome",
@@ -121,6 +121,7 @@ Module.register("Gateway", {
     switch(status) {
       case "ASSISTANT_LISTEN":
       case "ASSISTANT_THINK":
+        if (this.GW["EXT-Detector"].hello) this.sendNotification("EXT_DETECTOR-STOP")
         if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
           if (!this.GW["EXT-Screen"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
           this.sendNotification("EXT_SCREEN-LOCK", { show: true } )
@@ -132,6 +133,7 @@ Module.register("Gateway", {
         if (this.GW["EXT-FreeboxTV"].hello && this.GW["EXT-FreeboxTV"].connected) this.sendNotification("EXT-FREEBOXTV-VOLUME_MIN")
         break
       case "ASSISTANT_STANDBY":
+        if (this.GW["EXT-Detector"].hello) this.sendNotification("EXT_DETECTOR-START")
         if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
           this.sendNotification("EXT_SCREEN-UNLOCK", { show: true } )
         }
@@ -319,10 +321,10 @@ Module.register("Gateway", {
   },
 
   browserOrPhoto: function() {
-    if ((this.GW["EXT-Browser"].hello && this.GW["EXT-Browser"].connected) ||
-        (this.GW["EXT-Photos"].hello && this.GW["EXT-Photos"].connected)) {
-          console.log("browserOrPhoto", true)
-          return true
+    if ((this.GW["EXT-Browser"].hello && this.GW["EXT-Browser"].connected) || 
+      (this.GW["EXT-Photos"].hello && this.GW["EXT-Photos"].connected)) {
+        logGW("browserOrPhoto", true)
+        return true
     }
     return false
   },
@@ -372,7 +374,7 @@ Module.register("Gateway", {
 
     // the show must go on !
     this.urls = configMerge({}, this.urls, tmp)
-    if (this.urls.photos.length > 0 && this.GW["EXT-Photos"].hello) {
+    if(this.urls.photos.length > 0 && this.GW["EXT-Photos"].hello) {
       this.GW["EXT-Photos"].connected = true
       this.sendNotification("EXT_PHOTOS-OPEN", this.urls.photos.urls)
       logGW("Forced connected: EXT-Photos")
