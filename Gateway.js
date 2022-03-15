@@ -69,8 +69,17 @@ Module.register("Gateway", {
     }
   },
 
-  getScripts: function() {
-    return [ ]
+  getTranslations: function() {
+    return {
+      en: "translations/en.json",
+      fr: "translations/fr.json",
+      it: "translations/it.json",
+      de: "translations/de.json",
+      es: "translations/es.json",
+      nl: "translations/nl.json",
+      pt: "translations/pt.json",
+      ko: "translations/ko.json"
+    }
   },
 
   getDom: function() {
@@ -173,6 +182,12 @@ Module.register("Gateway", {
         this.GW["EXT-Screen"].power = true
         break
       case "EXT_STOP":
+        if (!this.GW["EXT-Alert"].hello) {
+          this.sendNotification("EXT_ALERT", {
+            type: "information",
+            message: this.translate("EXTStop")
+          })
+        }
         break
       case "EXT_MUSIC-CONNECTED":
         if (!this.GW["EXT-MusicPlayer"].hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
