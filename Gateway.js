@@ -275,12 +275,19 @@ Module.register("Gateway", {
       case this.ExtDB.find(name => name === module): //read DB and find module
         this.GW[module].hello= true
         logGW("Hello,", module)
-        if (module == "EXT-Background") this.sendNotification("GAv4_FORCE_FULLSCREEN")
+        this.onStartPlugin(module)
         break
       default:
         console.error("[GATEWAY] Hi,", module, "what can i do for you ?")
         break
     }
+  },
+
+  /** Rule when a plugin send Hello **/
+  onStartPlugin: function (plugin) {
+    if (!plugin) return
+    if (plugin == "EXT-Background") this.sendNotification("GAv4_FORCE_FULLSCREEN")
+    if (plugin == "EXT-Detector") setTimeout(() => this.sendNotification("EXT_DETECTOR-START") , 300)
   },
 
   /** connected rules **/
