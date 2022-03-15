@@ -69,8 +69,17 @@ Module.register("Gateway", {
     }
   },
 
-  getScripts: function() {
-    return [ ]
+  getTranslations: function() {
+    return {
+      en: "translations/en.json",
+      fr: "translations/fr.json",
+      it: "translations/it.json",
+      de: "translations/de.json",
+      es: "translations/es.json",
+      nl: "translations/nl.json",
+      pt: "translations/pt.json",
+      ko: "translations/ko.json"
+    }
   },
 
   getDom: function() {
@@ -122,7 +131,7 @@ Module.register("Gateway", {
       case "ASSISTANT_LISTEN":
       case "ASSISTANT_THINK":
         if (this.GW["EXT-Detector"].hello) this.sendNotification("EXT_DETECTOR-STOP")
-        if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+        if(this.GW["EXT-Screen"].hello && !this.hasPluginConnected(this.GW, "connected", true)) {
           if (!this.GW["EXT-Screen"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
           this.sendNotification("EXT_SCREEN-LOCK", { show: true } )
         }
@@ -134,7 +143,7 @@ Module.register("Gateway", {
         break
       case "ASSISTANT_STANDBY":
         if (this.GW["EXT-Detector"].hello) this.sendNotification("EXT_DETECTOR-START")
-        if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+        if(this.GW["EXT-Screen"].hello && !this.hasPluginConnected(this.GW, "connected", true)) {
           this.sendNotification("EXT_SCREEN-UNLOCK", { show: true } )
         }
         if (this.GW["EXT-Spotify"].hello && this.GW["EXT-Spotify"].connected) this.sendNotification("EXT_SPOTIFY-VOLUME_MAX")
@@ -173,6 +182,12 @@ Module.register("Gateway", {
         this.GW["EXT-Screen"].power = true
         break
       case "EXT_STOP":
+        if (this.GW["EXT-Alert"].hello && this.hasPluginConnected(this.GW, "connected", true)) {
+          this.sendNotification("EXT_ALERT", {
+            type: "information",
+            message: this.translate("EXTStop")
+          })
+        }
         break
       case "EXT_MUSIC-CONNECTED":
         if (!this.GW["EXT-MusicPlayer"].hello) return console.log("[GATEWAY] Warn MusicPlayer don't say to me HELLO!")
@@ -293,7 +308,7 @@ Module.register("Gateway", {
   /** connected rules **/
   connected: function(extName) {
     if (!this.GW.ready) return console.error("[GATEWAY] Hey!,", extName, "MMM-GoogleAssistant is not ready")
-    if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) {
+    if(this.GW["EXT-Screen"].hello && !this.hasPluginConnected(this.GW, "connected", true)) {
       if (!this.GW["EXT-Screen"].power) this.sendNotification("EXT_SCREEN-WAKEUP")
       this.sendNotification("EXT_SCREEN-LOCK")
     }
@@ -322,7 +337,7 @@ Module.register("Gateway", {
     if (extName) this.GW[extName].connected = false
     // sport time ... verify if there is again an EXT module connected !
     setTimeout(()=> { // wait 1 sec before scan ...
-      if(this.GW["EXT-Screen"].hello && !this.hasOwnDeepValueProperty(this.GW, "connected", true)) this.sendNotification("EXT_SCREEN-UNLOCK")
+      if(this.GW["EXT-Screen"].hello && !this.hasPluginConnected(this.GW, "connected", true)) this.sendNotification("EXT_SCREEN-UNLOCK")
       logGW("Disconnected:", extName)
     }, 1000)
   },
@@ -340,17 +355,17 @@ Module.register("Gateway", {
   /**** Tools ****/
   /***************/
 
-  /** hasOwnDeepValueProperty(obj, key, value)
+  /** hasPluginConnected(obj, key, value)
    * obj: object to check
    * key: key to check in deep
    * value: value to check with associated key
    * @bugsounet 09/01/2022
   **/
-  hasOwnDeepValueProperty: function(obj, key, value) {
+  hasPluginConnected: function(obj, key, value) {
     if (typeof obj === 'object' && obj !== null) {
       if (obj.hasOwnProperty(key)) return true
       for (var p in obj) {
-        if (obj.hasOwnProperty(p) && this.hasOwnDeepValueProperty(obj[p], key, value)) {
+        if (obj.hasOwnProperty(p) && this.hasPluginConnected(obj[p], key, value)) {
           //logGW("check", key+":"+value, "in", p)
           if (obj[p][key] == value) {
             logGW(p, "is connected")
