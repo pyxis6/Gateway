@@ -16,15 +16,15 @@ Module.register("Gateway", {
     this.ExtDB = [
       "EXT-Alert",
       "EXT-Background",
+      "EXT-Bring",
       "EXT-Browser",
-      "EXT-Deezer", // not coded
       "EXT-Detector",
       "EXT-FreeboxTV",
       "EXT-GooglePhotos",
       "EXT-Governor",
       "EXT-Internet",
       "EXT-Led", // not coded
-      "EXT-Librespot", // under coding (missing installer)
+      "EXT-Librespot",
       "EXT-MusicPlayer",
       "EXT-Photos",
       "EXT-Pir",
@@ -34,7 +34,7 @@ Module.register("Gateway", {
       "EXT-Screen",
       "EXT-ScreenManager",
       "EXT-ScreenTouch",
-      "EXT-Spotify", //under coding...  (need to code fullscreen and lyrics)
+      "EXT-Spotify",
       "EXT-UpdateNotification",
       "EXT-Volume",
       "EXT-Welcome",
