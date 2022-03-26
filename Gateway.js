@@ -28,8 +28,8 @@ Module.register("Gateway", {
       "EXT-MusicPlayer",
       "EXT-Photos",
       "EXT-Pir",
-      "EXT-RadioPlayer", // to finish (missing installer)
-      "EXT-Raspotify", // under Coding (missing full installer)
+      "EXT-RadioPlayer",
+      "EXT-Raspotify",
       "EXT-Setup", // not coded
       "EXT-Screen",
       "EXT-ScreenManager",
